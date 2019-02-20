@@ -11,8 +11,6 @@ from bs4 import (
 
 # - Requests
 
-SLEEP_DELAY = 0.5
-
 LAST_REQUEST = None
 
 HEADERS = {
@@ -28,7 +26,7 @@ CLEAN_TAGS = ('head', 'script', 'link', 'style', 'noscript', 'meta', 'iframe')
 EXTRA_TAGS = ('img',)
 
 
-def get_txt(href: str, delay: float = SLEEP_DELAY):
+def get_txt(url: str, delay: float = 0.5):
     global LAST_REQUEST
 
     if not LAST_REQUEST:
@@ -41,7 +39,7 @@ def get_txt(href: str, delay: float = SLEEP_DELAY):
     if sleep_time > 0:
         sleep(sleep_time)
 
-    txt = SESSION.get(href).text
+    txt = SESSION.get(url).text
 
     #todo handle non 200s
 
@@ -54,8 +52,18 @@ def make_strainer(el: str, d: dict):
     return SoupStrainer(el, d)
 
 
-def clean_soup(soup: BeautifulSoup, tags: Iterable[str] = CLEAN_TAGS, extra_tags: Iterable[str] = EXTRA_TAGS, remove_comments: bool = True):
+def clean_soup(
+        soup: BeautifulSoup,
+        tags: Iterable[str] = CLEAN_TAGS,
+        extra_tags: Iterable[str] = EXTRA_TAGS,
+        remove_imgs: bool = True,
+        remove_comments: bool = True,
+        *_args, **_kwargs
+):
     tags = list(tags)
+    extra_tags = list(extra_tags)
+    if not remove_imgs and 'img' in extra_tags:
+        extra_tags.remove('img')
     if extra_tags:
         tags += list(extra_tags)
 
@@ -64,18 +72,22 @@ def clean_soup(soup: BeautifulSoup, tags: Iterable[str] = CLEAN_TAGS, extra_tags
 
     if remove_comments:
         for com in soup.find_all(string=lambda t: isinstance(t, (Comment, CData, ProcessingInstruction, Doctype))):  # type: Tag
-            com.decompose()
+            com.extract()
 
     return soup
 
 
-def get_soup(txt: str, clean: bool = True, strainer: SoupStrainer = None):
+def get_soup(txt: str, clean: bool = True, strainer: SoupStrainer = None, *args, **kwargs):
     if strainer:
         soup = BeautifulSoup(txt, 'lxml', parse_only=strainer)
     else:
         soup = BeautifulSoup(txt, 'lxml')
 
     if clean:
-        soup = clean_soup(soup)
+        soup = clean_soup(soup, *args, **kwargs)
 
     return soup
+
+
+def get_and_clean(url: str, *args, **kwargs):
+    return get_soup(get_txt(url), *args, **kwargs)
