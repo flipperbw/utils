@@ -1,6 +1,5 @@
-#!/usr/local/bin/python2.7
+#!/usr/bin/env python3
 
-import os
 import sys
 import time
 import json
@@ -126,7 +125,7 @@ def download_comments(youtube_id, sleep=1):
 
 
 def main(argv):
-    parser = argparse.ArgumentParser(add_help=False, description=('Download Youtube comments without using the Youtube API'))
+    parser = argparse.ArgumentParser(add_help=False, description='Download Youtube comments without using the Youtube API')
     parser.add_argument('--help', '-h', action='help', default=argparse.SUPPRESS, help='Show this help message and exit')
     parser.add_argument('--youtubeid', '-y', help='ID of Youtube video for which to download the comments')
     parser.add_argument('--output', '-o', help='Output filename (output format is line delimited JSON)')
@@ -141,19 +140,18 @@ def main(argv):
             parser.print_usage()
             raise ValueError('you need to specify a Youtube ID and an output filename')
 
-        print 'Downloading Youtube comments for video:', youtube_id
+        print('Downloading Youtube comments for video:', youtube_id)
         count = 0
         with open(output, 'wb') as fp:
             for comment in download_comments(youtube_id):
-                print >> fp, json.dumps(comment)
+                print(json.dumps(comment), file=fp)
                 count += 1
                 sys.stdout.write('Downloaded %d comment(s)\r' % count)
                 sys.stdout.flush()
-        print '\nDone!'
+        print('\nDone!')
 
-
-    except Exception, e:
-        print 'Error:', str(e)
+    except Exception as e:
+        print('Error:', str(e))
         sys.exit(1)
 
 
