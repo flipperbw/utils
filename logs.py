@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from functools import partialmethod, partial
-from typing import Dict
+from typing import Dict, Union
 
 import coloredlogs
 import verboselogs
@@ -12,7 +12,7 @@ from humanfriendly.terminal import ANSI_RESET, ansi_style
 
 #todo logging blank does not reset color?
 
-levels = {
+LEVELS = {
     #'NOTSET':   '_',  # 0
     'SPAM':     'x',  # 5
     'DEBUG':    'd',  # 10
@@ -28,7 +28,7 @@ levels = {
 
 
 class LogWrapper:
-    def __init__(self, logger: logging.Logger, skip_main: bool):
+    def __init__(self, logger: verboselogs.VerboseLogger, skip_main: bool):
         self.logger = logger
 
         if hasattr(sys, 'frozen'):  # support for py2exe
@@ -41,12 +41,13 @@ class LogWrapper:
 
         self.skip_main = skip_main
 
+        self.levels = LEVELS
         self.enabled_levels: Dict[int, bool] = {}
 
         self._set_enabled()
 
-    def _set_enabled(self, wrappers=False):
-        for ln, la in levels.items():
+    def _set_enabled(self, wrappers: bool = False):
+        for ln, la in LEVELS.items():
             got_level = self.get_level(ln)
             enabled_lv = self.logger.isEnabledFor(got_level)
             self.enabled_levels[got_level] = enabled_lv
@@ -143,27 +144,10 @@ class LogWrapper:
             break
         return rv
 
-
-def log_init(level, skip_main=True, **_kwargs) -> LogWrapper:
-    if isinstance(level, str):
-        level = level.upper()
-        #if level = 'DISABLED': # todo
-
-        if not hasattr(logging, level):
-            raise TypeError('Invalid level requested: {}'.format(level))
-
-    level_styles = {}
-
-    for ln, la in levels.items():
-        conv_level = LogWrapper.get_level(ln)
-        logging.addLevelName(conv_level, la)
-        setattr(logging, la.upper(), conv_level)
-        level_styles[la] = coloredlogs.DEFAULT_LEVEL_STYLES[ln.lower()]
-
-    #logger = logging.getLogger(__name__)
-    logger = verboselogs.VerboseLogger(__name__)
-
-    logger.setLevel(level)
+def _set_styles():
+    level_styles = {
+        la: coloredlogs.DEFAULT_LEVEL_STYLES[ln.lower()] for ln, la in LEVELS.items()
+    }
 
     # 'black', 'blue', 'cyan', 'green', 'magenta', 'red', 'white' and 'yellow'  # todo
     level_styles['i'] = {'color': 'cyan', 'bright': True}
@@ -189,9 +173,34 @@ def log_init(level, skip_main=True, **_kwargs) -> LogWrapper:
     #use a formatter to set levelname color = msg (setFormatter?)
     #https://github.com/xolox/python-coloredlogs/blob/master/coloredlogs/__init__.py#L1113
 
+    return level_styles, field_styles, form
+
+def log_init(level: Union[str, int] = 20, skip_main: bool = False, **_kwargs) -> LogWrapper:
+    """Initialize logger.
+    Level can be an integer, or a string in:
+        SPAM, DEBUG, VERBOSE, INFO, NOTICE, WARNING, SUCCESS, ERROR, CRITICAL
+    """
+    #NOTSET, ALWAYS
+
+    if isinstance(level, str):
+        level = level.upper()
+        #if level = 'DISABLED': # todo
+
+        if not hasattr(logging, level):
+            raise TypeError('Invalid level requested: {}'.format(level))
+
+    for ln, la in LEVELS.items():
+        conv_level = LogWrapper.get_level(ln)
+        logging.addLevelName(conv_level, la)
+        setattr(logging, la.upper(), conv_level)
+
+    logger = verboselogs.VerboseLogger(__name__)
+
+    level_styles, field_styles, form = _set_styles()
+
     cl_config = {
         'logger': logger,
-        'level': level,
+        'level': 0,
         'stream': sys.stdout,
         'level_styles': level_styles,
         'field_styles': field_styles,
@@ -203,11 +212,13 @@ def log_init(level, skip_main=True, **_kwargs) -> LogWrapper:
 
     coloredlogs.install(**cl_config)
 
+    logger.setLevel(level)
+
     return _create_wrapper(logger, skip_main)
 
 
 def _create_wrapper(logger, skip_main) -> LogWrapper:
-    for ln, la in levels.items():
+    for ln, la in LEVELS.items():
         l_i = getattr(logging, ln)
         if logger.isEnabledFor(l_i):
             setattr(LogWrapper, la, partialmethod(LogWrapper.l, l_i))

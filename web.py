@@ -14,7 +14,7 @@ from bs4 import (
 LAST_REQUEST = None
 
 HEADERS = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/41.0.2272.101 Safari/537.36',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.87 Safari/537.36'
 }
 SESSION = requests.Session()
 SESSION.headers.update(HEADERS)
@@ -26,7 +26,7 @@ CLEAN_TAGS = ('head', 'script', 'link', 'style', 'noscript', 'meta', 'iframe')
 EXTRA_TAGS = ('img',)
 
 
-def get_txt(url: str, delay: float = 0.5):
+def get_req(url: str, delay: float = 0.5):
     global LAST_REQUEST
 
     if not LAST_REQUEST:
@@ -39,13 +39,16 @@ def get_txt(url: str, delay: float = 0.5):
     if sleep_time > 0:
         sleep(sleep_time)
 
-    txt = SESSION.get(url).text
+    req = SESSION.get(url)
 
     #todo handle non 200s
 
     LAST_REQUEST = time()
 
-    return txt
+    return req
+
+def get_txt(url: str, delay: float = 0.5):
+    return get_req(url, delay).text
 
 
 def make_strainer(el: str, d: dict):
