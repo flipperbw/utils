@@ -26,6 +26,8 @@ LEVELS = {
     #'ALWAYS':   'a',  # 60 # todo
 }
 
+DEFAULT_LOGLEVEL = 20
+
 
 class LogWrapper:
     def __init__(self, logger: verboselogs.VerboseLogger, skip_main: bool):
@@ -123,6 +125,7 @@ class LogWrapper:
         if record.processName == 'MainProcess':
             record.processName = 'Main'
 
+        sys.stdout.write('\r')
         self.logger.handle(record)
 
         #if not record.msg: # TODO
@@ -151,9 +154,9 @@ def _set_styles():
 
     # 'black', 'blue', 'cyan', 'green', 'magenta', 'red', 'white' and 'yellow'  # todo
     level_styles['i'] = {'color': 'cyan', 'bright': True}
-    level_styles['info'] = {'color': 'cyan', 'bright': True}
+    level_styles['info'] = level_styles['i']
     level_styles['d'] = {'color': 'cyan'}
-    level_styles['debug'] = {'color': 'cyan'}
+    level_styles['debug'] = level_styles['d']
 
     field_styles = coloredlogs.DEFAULT_FIELD_STYLES
 
@@ -175,7 +178,7 @@ def _set_styles():
 
     return level_styles, field_styles, form
 
-def log_init(level: Union[str, int] = 20, skip_main: bool = False, **_kwargs) -> LogWrapper:
+def log_init(level: Union[str, int] = DEFAULT_LOGLEVEL, skip_main: bool = False, **_kwargs) -> LogWrapper:
     """Initialize logger.
     Level can be an integer, or a string in:
         SPAM, DEBUG, VERBOSE, INFO, NOTICE, WARNING, SUCCESS, ERROR, CRITICAL
