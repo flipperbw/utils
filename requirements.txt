@@ -1,0 +1,6 @@
+beautifulsoup4
+colored
+coloredlogs
+humanfriendly
+lxml
+verboselogs
