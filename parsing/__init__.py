@@ -1,3 +1,5 @@
+"""Parse command line options"""
+
 import argparse
 import re
 import shutil
@@ -10,6 +12,7 @@ from colored import attr, fg, stylize
 
 from my_utils.logs import DEFAULT_LOGLEVEL, LEVELS
 
+#https://i.stack.imgur.com/KTSQa.png
 BLUE  = fg(153)
 RED   = fg(160)
 GREEN = fg(120)
