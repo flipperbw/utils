@@ -3,4 +3,5 @@ colored
 coloredlogs
 humanfriendly
 lxml
+requests
 verboselogs

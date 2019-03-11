@@ -8,7 +8,7 @@ from typing import Union
 import verboselogs
 from colored import attr, fg, stylize
 
-from utils.logs import DEFAULT_LOGLEVEL, LEVELS
+from my_utils.logs import DEFAULT_LOGLEVEL, LEVELS
 
 BLUE  = fg(153)
 RED   = fg(160)
